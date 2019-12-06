@@ -13,9 +13,6 @@
 
 #include "walt.h"
 
-//curtis@ASTI, 2019/4/29, add for uxrealm CONFIG_OPCHAIN
-#include "../coretech/uxcore/opchain_helper.h"
-
 int sched_rr_timeslice = RR_TIMESLICE;
 int sysctl_sched_rr_timeslice = (MSEC_PER_SEC / HZ) * RR_TIMESLICE;
 
@@ -1780,8 +1777,6 @@ static int rt_energy_aware_wake_cpu(struct task_struct *task)
 	bool boost_on_big = sched_boost() == FULL_THROTTLE_BOOST ?
 				  (sched_boost_policy() == SCHED_BOOST_ON_BIG) :
 				  false;
-//curtis@ASTI, 2019/4/29, add for uxrealm CONFIG_OPCHAIN
-	bool best_cpu_is_claimed = false;
 
 	rcu_read_lock();
 
@@ -1808,12 +1803,6 @@ retry:
 		}
 
 		for_each_cpu_and(cpu, lowest_mask, sched_group_span(sg)) {
-// add for chainboost CONFIG_ONEPLUS_CHAIN_BOOST
-			struct rq *rq = cpu_rq(cpu);
-			struct task_struct *tsk = rq->curr;
-
-			if (tsk->main_boost_switch || tsk->main_wake_boost)
-				continue;
 			if (cpu_isolated(cpu))
 				continue;
 
@@ -1824,17 +1813,6 @@ retry:
 
 			if (__cpu_overutilized(cpu, tutil))
 				continue;
-
-//curtis@ASTI, 2019/4/29, add for uxrealm CONFIG_OPCHAIN
-			if (best_cpu_is_claimed) {
-				best_cpu_idle_idx = cpu_idle_idx;
-				best_cpu_util_cum = util_cum;
-				best_cpu_util = util;
-				best_cpu = cpu;
-				best_cpu_is_claimed = false;
-				continue;
-			}
-
 
 			/* Find the least loaded CPU */
 			if (util > best_cpu_util)
@@ -1865,13 +1843,6 @@ retry:
 				if (best_cpu_idle_idx == cpu_idle_idx &&
 						best_cpu_util_cum < util_cum)
 					continue;
-			}
-//curtis@ASTI, 2019/4/29, add for uxrealm CONFIG_OPCHAIN
-			if (opc_get_claim_on_cpu(cpu)) {
-				if (best_cpu != -1)
-					continue;
-				else
-					best_cpu_is_claimed = true;
 			}
 
 			best_cpu_idle_idx = cpu_idle_idx;

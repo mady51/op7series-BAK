@@ -80,9 +80,9 @@ walt_inc_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
 static inline void
 walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
 
+#endif
 #define walt_inc_throttled_cfs_rq_stats(...)
 #define walt_dec_throttled_cfs_rq_stats(...)
-
 
 // add for chainboost CONFIG_ONEPLUS_CHAIN_BOOST
 unsigned  int __read_mostly main_preempt_disable = 1;
